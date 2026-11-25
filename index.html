@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Compare the hardware cost and usable capacity of a one-drive NAS and a two-drive RAID 1 mirror. Work out what you can spend on the enclosure.">
+  <link rel="canonical" href="./">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.mjs"></script>
+  <title>NAS Budget &amp; Capacity Check | Coupinify</title>
+</head>
+<body>
+  <a class="skip-link" href="#calculator">Skip to calculator</a>
+  <header class="site-header">
+    <div class="shell header-row">
+      <span class="wordmark">Coupinify</span>
+      <nav aria-label="On this page">
+        <a href="#examples">Examples</a>
+        <a href="#use-the-code">Use the code</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="intro" aria-labelledby="title">
+      <h1 id="title">NAS Budget &amp;<br class="title-break"> Capacity Check</h1>
+      <p>Set a hardware budget and see how much room you have for the enclosure, what the setup costs, and how much space you get.</p>
+    </section>
+
+    <section class="calculator" id="calculator" aria-label="NAS budget calculator">
+      <form id="nas-form">
+        <h2>Your setup</h2>
+        <div class="fields">
+          <label for="budget">Hardware budget ($)
+            <input id="budget" name="budget" type="number" inputmode="decimal" min="0" max="1000000" step="0.01" value="700" required>
+          </label>
+          <label for="enclosure">Enclosure price ($)
+            <input id="enclosure" name="enclosure" type="number" inputmode="decimal" min="0" max="1000000" step="0.01" value="280" required>
+          </label>
+          <label for="drive-price">Price per drive ($)
+            <input id="drive-price" name="drive-price" type="number" inputmode="decimal" min="0" max="1000000" step="0.01" value="200" required>
+          </label>
+          <label for="drive-capacity">Capacity per drive (TB)
+            <input id="drive-capacity" name="drive-capacity" type="number" inputmode="decimal" min="0.001" max="1000" step="0.001" value="4" required>
+          </label>
+        </div>
+        <fieldset>
+          <legend>Storage setup</legend>
+          <div class="choices">
+            <label><input type="radio" name="mode" value="basic"> One drive (Basic)</label>
+            <label><input type="radio" name="mode" value="raid1" checked> Two identical drives (RAID 1)</label>
+          </div>
+        </fieldset>
+        <button type="submit" disabled>Calculate</button>
+        <noscript><p>Enable JavaScript to calculate with your prices. The examples below are available without it.</p></noscript>
+      </form>
+
+      <div class="results" aria-labelledby="results-title">
+        <h2 id="results-title">Your estimate</h2>
+        <div aria-live="polite" aria-atomic="true">
+          <p class="metric-label">Hardware subtotal</p>
+          <p class="total" id="subtotal">$680.00</p>
+          <p class="budget-status" id="budget-status">Within budget by $20.00</p>
+          <dl>
+            <div><dt>Drive cost</dt><dd id="drive-cost">$400.00</dd></div>
+            <div><dt>Budget left for enclosure</dt><dd id="enclosure-budget">$300.00</dd></div>
+            <div><dt>Combined drive capacity</dt><dd id="raw-capacity">8 TB</dd></div>
+            <div><dt>Usable before overhead</dt><dd id="usable-capacity">4 TB (3.64 TiB)</dd></div>
+          </dl>
+          <p id="subtraction-note">Two identical drives mirror the same data.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="copy-section" id="examples" aria-labelledby="examples-title">
+      <h2 id="examples-title">Three budgets to compare</h2>
+      <p>These examples use illustrative prices in U.S. dollars. Add sales tax, delivery, and any accessories separately before you order.</p>
+      <div class="examples">
+        <article>
+          <h3>One 4 TB drive</h3>
+          <p>A $280 enclosure and one $200 drive cost <strong>$480</strong>. Against a $700 budget, the drive leaves $500 available for the enclosure. Usable capacity is about 4 TB before overhead.</p>
+        </article>
+        <article>
+          <h3>Two 4 TB drives in RAID 1</h3>
+          <p>The same enclosure and two $200 drives cost <strong>$680</strong>. The drives leave $300 available for the enclosure. The pair has 8 TB combined and about 4 TB usable before overhead.</p>
+        </article>
+        <article>
+          <h3>The drives exceed the budget</h3>
+          <p>Two $180 drives cost <strong>$360</strong>. With a $300 budget, the drives alone are $60 over. Revise the budget or price a different pair before choosing an enclosure.</p>
+        </article>
+      </div>
+      <p class="source-link"><a href="https://coupinify.com/blog/diskless-nas-cost">See the diskless NAS cost breakdown and drive compatibility checks</a></p>
+    </section>
+
+    <section class="copy-section" id="use-the-code" aria-labelledby="code-title">
+      <h2 id="code-title">Use the JavaScript estimator</h2>
+      <p>Call <code>estimateNas</code> with prices in whole cents and drive capacity in decimal TB. Use <code>basic</code> for one drive or <code>raid1</code> for two identical drives. The function returns costs in cents, raw and usable capacity in TB, and usable capacity in TiB.</p>
+      <pre><code>import { estimateNas } from "./nas-budget.mjs";
+
+const result = estimateNas({
+  budgetCents: 70000,
+  enclosureCents: 28000,
+  pricePerDriveCents: 20000,
+  capacityPerDriveTB: 4,
+  mode: "raid1",
+});
+
+console.log(result.subtotalCents); // 68000
+console.log(result.enclosureBudgetCents); // 30000
+console.log(result.usableTB); // 4</code></pre>
+      <details>
+        <summary>How the numbers are calculated</summary>
+        <p>The hardware subtotal adds the enclosure and drive costs. The available enclosure budget is the hardware budget minus the cost of the drives, with a floor of $0. For a two-drive mirror, usable capacity equals the capacity of one drive before formatting and system overhead. To convert TB to TiB, multiply by 10<sup>12</sup> and divide by 2<sup>40</sup>.</p>
+        <p>Check the compatibility list for the exact NAS and drive model. Keep a recoverable backup separate from the NAS.</p>
+      </details>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="shell">Coupinify</div>
+  </footer>
+</body>
+</html>
